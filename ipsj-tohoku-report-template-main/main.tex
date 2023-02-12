@@ -1,0 +1,147 @@
+% \RequirePackage{plautopatch} % If use uplatex, enable this line.
+\documentclass[twocolumn,paper=a4paper,landscape,fontsize=9pt]{jlreq}
+\usepackage{url}
+\usepackage{graphicx}
+
+\usepackage[backend=bibtex,sorting=none]{biblatex}
+\usepackage{ipsj-tohoku}
+
+\bibliography{cites}
+
+\title{タンパク質配列グラフ表示画像の作成に適したアミノ酸指標の組み合わせの探索}
+
+\author{土山啓汰 水田智史\thanks{1}}
+
+% \TechrepVolNoDate{2021-6}{}{2022/02/21}
+% \Copyright{Information Processing Society of Japan}
+
+\begin{document}
+
+\affiliation{1}{情報処理学会東北支部大学}
+
+\maketitle
+
+\begin{abstract}
+  これは非公式の情報処理学会東北支部研究会の発表資料テンプレートである。
+
+  uplatex,lualatexで動作することが確認されている。
+
+  なお、このabstractは再定義されているため、プリアンブルに記述すると動作しない。
+\end{abstract}
+
+\section{イントロダクション}
+\subsection{研究の背景と目的}
+本研究ではタンパク質のアミノ酸配列を扱う。アミノ酸はタンパク質の構成要素である。20種類の異なるアミノ酸がタンパク質の合成に用いられる。各タンパク質の形状や他の特性はそこに含まれるアミノ酸の配列の仕方によって決定し、アミノ酸配列が似ているほど機能や性質が類似している可能性が高いと言える。 \\
+　タンパク質のアミノ酸配列間の類似性を評価する方法として、一般的にアライメントが用いられている。しかし、配列長が$N$と$N$の場合は動的計画法により$O(N^2)$の時間計算量となり、肥大な計算時間が必要となる。そのため、本研究室ではアライメントに依らないタンパク質アミノ酸配列比較の手法として、アミノ酸に何らかの2次元ベクトルを割り当てグラフィカル表現を行うことが提案されてきた。これにより、グラフが似ていれば類似性が高いといったような直観的な評価が可能となる。また、同時に定量的な評価も行う。\\
+　本研究では、この手法の精度を高めるために、アミノ酸のベクトルの割り当て方に注目し、遺伝子解析同等の系統樹を早く作成することを目的としている。
+
+
+\section{方法}
+\subsection{ベクトルの割り当て}
+タンパク質のアミノ酸配列を3次元座標群化するためにアミノ酸20種にベクトルを割り当てる。本研究では、AAindexに掲載されているアミノ酸指標566種類のうち、重複した値が使用されている場合を除外した166種類の指標を利用する。
+　具体的には、166種類のうち3種類のアミノ酸指標を選択し、そのアミノ酸指標間の相関係数の絶対値の和を利用する。そこで使用したアミノ酸指標3種をそれぞれx, y, z座標に割り当てる。また、本研究では、絶対値の和を昇順に並べたリストを作成し、上位1000位までの指標を実験対象とした。
+
+\subsection{三次元座標群の作成}
+アミノ酸に割り当てたベクトルを元に三次元座標群を作成する。例として配列ACDEFに対する座標群を表に示す。
+
+\newpage
+\begin{table}[h]
+\centering
+\caption{3次元座標群の例}
+\scalebox{1}[1]{
+\begin{tabular}{c|lll}\hline
+&X&Y&Z \\ \hline
+&0&0&0 \\[-2mm]
+A&&↓&\\[-2mm]
+&0&0.83&1.083\\[-2mm]
+C&&↓&\\[-2mm]
+&1.007&-0.177&2.942\\[-2mm]
+D&&↓&\\[-2mm]
+&1.629&0.9&4.205\\[-2mm]
+E&&↓&\\[-2mm]
+&2.205&-0.1&5.377\\[-2mm]
+F&&↓&\\[-2mm]
+&1.51&-1.305&6.79\\ \hline
+\end{tabular}}
+\end{table}
+
+\subsection{重み}
+アミノ酸にベクトルを与えた後、配列の情報をより反映させるために重み利用する。重みには自己情報量を用いて
+\begin{equation}
+-\log10 \frac{各アミノ酸の数}{アミノ酸の総数} \\
+\end{equation}
+
+により求めた。この重みをそれぞれのベクトルに掛けたものを本研究では使用する。
+
+\begin{table}[h]
+\centering
+\caption{重み}
+\scalebox{1}[1]{
+\begin{tabular}{|cc|cc|cc|} \hline
+アミノ酸 & 重み & アミノ酸 & 重み & アミノ酸 & 重み\\ \hline
+A &1.083 &I &1.228 &R &1.257 \\[-2mm]
+C &1.859 &K &1.236 &S &1.178 \\[-2mm]
+D &1.263 &L &1.015 &T &1.271 \\[-2mm]
+E &1.172 &M &1.617 &V &1.163 \\[-2mm]
+F &1.413 &N &1.391 &W &1.959 \\[-2mm]
+G &1.150 &P &1.324 &Y &1.535 \\[-2mm]
+H &1.643 &Q &1.405 &\ &\ \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsection{距離行列の求め方}
+生物の配列のグラフ化行った後、それぞれのグラフに対して主成分分析を行う。本研究では、求めた主成分に対してコサイン類似度を適用した距離行列、スペクトル解析を行った後、コサイン類似度を適用した距離行列をそれぞれ求めた。
+
+\subsubsection{主成分分析}
+
+\subsubsection{コサイン類似度}
+主成分分析で求めたそれぞれの第一主成分のなす角を$θ$として$cosθ$を計算する。方向ベクトルを$\vec{a}$、$\vec{b}$とすると、$cosθ$は以下の式で求められる。
+
+\begin{equation}
+\cos = \frac{\vec{a}\cdot\vec{b}}{|\vec{a}||\vec{b}|}
+\end{equation}
+
+上記の式の値をアークコサインを用いて求めた$θ$の値を距離と定義した。
+
+\subsubsection{スペクトル解析}
+配列の位置を$x$軸、主成分分析で求めた第二主成分を$y$軸とした二次元グラフについて、離散フーリエ変換を用いて周波数成分を抽出する。
+\begin{equation}
+F(t) =\sum^{N-1}_{x = 0}f(x)\exp(\frac{-i2\pi tx}{N})
+\end{equation}
+
+抽出した周波数成分のパワースペクトルを求める。
+\begin{equation}
+power spectre = \sqrt[]{real^2+imag^2}
+\end{equation}
+
+パワースペクトルのコサイン類似度を求めた後、アークコサインを用いて求めた$θ$の値を距離と定義した。
+
+\section{結果}
+\subsection{実験に用いたデータ}
+本研究で使用した生物種は以前の研究[1]と同じ哺乳類の9種類で、以下の表の通りである。ミトゴンドリアDNAにコードされているNDAHデヒドロゲナーゼサブユニット5（以下ND5タンパク質）を使用した。
+
+\begin{table}[h]
+\centering
+\caption{使用した生物種}
+\scalebox{1}[1]{
+\begin{tabular}{|l|c|c|} \hline
+英名（和名）& accession no. & 配列長 \\ \hline
+Human：ヒト & AP\_000649 & 603 \\[-2mm]
+Gorilla：ゴリラ & NP\_008222 & 603 \\[-2mm]
+Pygmy chimpanzee（P.chi.）：ボノボ & NP\_008209 & 603 \\[-2mm]
+Common chimpanzee（C.chi.）：チンパンジー & NP\_008196 & 603 \\[-2mm]
+Fin whale（F.wh.）：ナガスクジラ & NP\_006899 & 606 \\[-2mm]
+Blue whale（B.wh.）：シロナガスクジラ & NP\_007066 & 606 \\[-2mm]
+Rat：ドブネズミ & AP\_004902 & 610 \\[-2mm]
+Mouse：ハツカネズミ  & NP\_904338 & 607 \\[-2mm]
+Opposum（Oposs.）：オポッサム & NP\_007105 & 602 \\ \hline
+\end{tabular}}
+\end{table}
+
+\subsection{系統樹の作成}
+生物種に対して、Clustal Omegaを用いてマルチプルアライメントで作成した系統樹と、コサイン類似度、及びスペクトル解析で作成した系統樹をrobinson-foulds距離で比較する。なお、系統樹の作成にはUPGMA法を用いる。
+
+\section{まとめと今後の課題}
+
+\end{document}
